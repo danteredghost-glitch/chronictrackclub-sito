@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chronic Track Club · Cronometro GPS per moto in pista</title>
+<meta name="description" content="Il cronometro GPS gratuito per chi porta la moto in pista. Giro automatico, distacco in tempo reale, analisi curva per curva. Ride · Analyze · Improve.">
+<link rel="canonical" href="https://www.chronictrackclub.it/">
+<meta name="theme-color" content="#07090D">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Chronic Track Club · Ogni giro è un dato">
+<meta property="og:description" content="Il cronometro GPS gratuito per chi porta la moto in pista. Ride · Analyze · Improve.">
+<meta property="og:url" content="https://www.chronictrackclub.it/">
+<meta property="og:image" content="https://www.chronictrackclub.it/foto/hero.jpg">
+<meta property="og:locale" content="it_IT">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 112 112'%3E%3Crect width='112' height='112' rx='24' fill='%2307090D'/%3E%3Cpath d='M82.79 35.07A34 34 0 1 0 82.79 76.93' fill='none' stroke='%23F4F6FA' stroke-width='14'/%3E%3Crect x='88.32' y='38.15' width='8.68' height='35.7' fill='%238BE33C'/%3E%3Ccircle cx='56' cy='56' r='4.76' fill='%238BE33C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090D;--surface:#10141B;--surface-2:#171D27;--line:#232B37;
+  --text:#F4F6FA;--muted:#8B95A5;--faint:#566072;
+  --accent:#2F80FF;--signal:#8BE33C;--signal-ink:#07090D;
+  --best:#B65CFF;--better:#2BDB6E;--worse:#FF4B4B;
+  --display:"Chakra Petch","Inter",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img,svg{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;z-index:50;background:var(--signal);color:var(--signal-ink);padding:10px 16px;border-radius:999px;font-weight:800;text-decoration:none}
+.skip:focus{left:12px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums}
+.label{font:700 12px/16px var(--body);letter-spacing:1.1px;text-transform:uppercase;color:var(--muted)}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:600 12px/16px var(--display);letter-spacing:.32em;text-transform:uppercase;color:var(--signal)}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--signal)}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance}
+h2{font-size:clamp(32px,5vw,58px);line-height:1;letter-spacing:.01em;text-transform:uppercase}
+h3{font-size:22px;line-height:1.15}
+p{margin:0}
+.lead{color:var(--muted);font-size:18px;max-width:56ch}
+section{padding:112px 0;position:relative}
+.sec-head{display:grid;gap:18px;margin-bottom:56px}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto;z-index:20;transition:background .25s,border-color .25s;border-bottom:1px solid transparent}
+.nav.solid{background:rgba(7,9,13,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:24px;height:72px}
+.nav .logo svg{height:40px;width:auto}
+.nav nav{margin-left:auto;display:flex;gap:28px}
+.nav nav a{text-decoration:none;color:var(--muted);font:700 14px/1 var(--body);transition:color .15s}
+.nav nav a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;border:1px solid var(--signal);background:var(--signal);color:var(--signal-ink);font:800 16px/20px var(--body);text-decoration:none;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(139,227,60,.6)}
+.btn svg{width:18px;height:18px}
+.btn--ghost{background:rgba(7,9,13,.4);border-color:var(--line);color:var(--text)}
+.btn--ghost:hover{border-color:var(--muted);box-shadow:none}
+.btn--sm{min-height:42px;padding:0 18px;font-size:14px}
+.btn[aria-disabled=true]{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+/* hero */
+.hero{min-height:100vh;min-height:100svh;padding:120px 0 72px;display:flex;align-items:center;overflow:hidden;isolation:isolate}
+.hero-bg{position:absolute;inset:0;z-index:-1;background:radial-gradient(900px 600px at 78% 40%,rgba(47,128,255,.10),transparent 60%),var(--bg)}
+.hero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 50%;opacity:.42}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 8%,rgba(7,9,13,.75) 45%,rgba(7,9,13,.35)),linear-gradient(0deg,var(--bg),transparent 30%)}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;width:100%}
+.hero h1{font-size:clamp(52px,8.6vw,112px);line-height:.96;text-transform:uppercase;margin:22px 0 24px}
+.hero h1 em{font-style:normal;color:var(--signal)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.pill{display:inline-block;border:1px solid var(--line);background:rgba(16,20,27,.6);color:var(--muted);border-radius:999px;padding:7px 13px;font:800 11px/14px var(--body);letter-spacing:.5px;text-transform:uppercase}
+.pill--signal{border-color:var(--signal);color:var(--signal)}
+.stage{position:relative;height:640px}
+.stage .trace{position:absolute;inset:-20px -90px -20px -40px}
+.stage .trace svg{width:100%;height:100%}
+.phone{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-4deg);width:300px;border-radius:42px;padding:10px;background:#1b1f24;box-shadow:0 0 0 1px #2c333c,0 50px 100px rgba(0,0,0,.7),0 0 120px -20px rgba(139,227,60,.25)}
+.screen{border-radius:32px;overflow:hidden;background:var(--bg)}
+.live{display:grid;gap:2px;padding:2px;background:var(--bg)}
+.live>div{background:var(--surface)}
+.live .top{display:flex;justify-content:space-between;padding:12px 14px 6px;font:800 11px/14px var(--body);letter-spacing:1px;color:var(--muted)}
+.live .top b{color:var(--better)}
+.live .hero-t{text-align:center;padding:10px 6px 14px}
+.live .lap{font:800 14px/20px var(--body);letter-spacing:2px;color:var(--muted)}
+.live .time{font:900 64px/1 var(--body);letter-spacing:-2px}
+.live .delta{font:900 40px/1.1 var(--body)}
+.live .cap{font:700 11px/16px var(--body);letter-spacing:1px;color:var(--muted)}
+.live .row{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--bg)!important}
+.live .row>div{background:var(--surface)}
+.live .sec{padding:8px 4px;text-align:center;font:900 17px/22px var(--body)}
+.live .sec small{display:block;font:900 10px/14px var(--body);color:var(--muted)}
+.live .sec.cur{outline:2px solid var(--text);outline-offset:-2px}
+.live .tile{padding:8px 10px}
+.live .tile b{display:block;font:800 21px/26px var(--body)}
+.live .tile span{font:800 10px/14px var(--body);letter-spacing:1px;color:var(--muted)}
+.t-best{color:var(--best)}.t-better{color:var(--better)}.t-worse{color:var(--worse)}
+.flash-g{animation:fg .7s}.flash-r{animation:fr .7s}
+@keyframes fg{0%{background:var(--better)}100%{background:var(--surface)}}
+@keyframes fr{0%{background:var(--worse)}100%{background:var(--surface)}}
+.demo-note{position:absolute;right:0;bottom:0;font:700 11px/14px var(--body);letter-spacing:1px;color:var(--faint);text-transform:uppercase}
+.scroll-cue{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);color:var(--faint);font:700 11px/1 var(--body);letter-spacing:2px;text-transform:uppercase;text-decoration:none}
+
+/* marquee */
+.band{border-block:1px solid var(--line);background:var(--surface);overflow:hidden;padding:18px 0}
+.band div{display:flex;gap:48px;width:max-content;animation:mq 45s linear infinite;font:600 14px/1 var(--display);letter-spacing:.32em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.band i{font-style:normal;color:var(--signal)}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:30px;transition:border-color .2s}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step .n{font:700 72px/1 var(--display);color:transparent;-webkit-text-stroke:1px var(--faint)}
+.step h3{margin:18px 0 10px;text-transform:uppercase;font-size:28px}
+.step p{color:var(--muted)}
+.step:nth-child(1) h3{color:var(--signal)}.step:nth-child(2) h3{color:var(--accent)}.step:nth-child(3) h3{color:var(--best)}
+.step:hover{border-color:var(--faint)}
+
+/* photos */
+.photos{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px}
+.photo{position:relative;aspect-ratio:4/5;border-radius:28px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,var(--surface-2),var(--bg));margin:0}
+.photo:first-child{aspect-ratio:auto;min-height:100%}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+.photo:hover img{transform:scale(1.04)}
+.photo .ghost{position:absolute;inset:10% 14% 26%;opacity:.55}
+.photo .ghost svg{width:100%;height:100%}
+.photo figcaption{position:absolute;left:0;right:0;bottom:0;padding:70px 24px 22px;background:linear-gradient(transparent,rgba(7,9,13,.94))}
+.photo figcaption b{display:block;font:700 28px/1.05 var(--display);text-transform:uppercase}
+.photo figcaption span{color:var(--muted);font-size:14px}
+
+/* features */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.f{grid-column:span 2;display:flex;flex-direction:column;gap:10px}
+.f.wide{grid-column:span 3}
+.f p{color:var(--muted);font-size:15px}
+.f:hover{border-color:var(--faint)}
+.ico{width:46px;height:46px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent);margin-bottom:6px}
+.ico svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mini{margin-top:auto;padding-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.mini .big{font:800 28px/32px var(--body);letter-spacing:-.5px}
+
+/* import highlight */
+.import{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;background:radial-gradient(700px 360px at 100% 0,rgba(47,128,255,.10),transparent),var(--surface)}
+.files{display:grid;gap:10px}
+.file{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:18px;background:var(--bg)}
+.file .ext{min-width:58px;text-align:center;padding:6px 8px;border-radius:10px;font:800 12px/1 var(--body);letter-spacing:.5px;background:var(--surface-2);color:var(--signal)}
+.file b{display:block;font-weight:700}
+.file span{color:var(--muted);font-size:13px}
+.file .ok{margin-left:auto;color:var(--better);font-weight:800}
+
+/* circuits */
+.circ{display:grid;grid-template-columns:320px 1fr;gap:14px}
+.tabs{display:flex;flex-direction:column;gap:8px}
+.tab{all:unset;box-sizing:border-box;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border:1px solid var(--line);border-radius:20px;background:var(--surface);transition:border-color .15s}
+.tab b{font:700 18px/1.2 var(--display);text-transform:uppercase}
+.tab span{color:var(--muted);font-size:13px}
+.tab:hover{border-color:var(--faint)}
+.tab[aria-selected=true]{border-color:var(--signal)}
+.tab[aria-selected=true] b{color:var(--signal)}
+.tab:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+.map{position:relative;min-height:520px;display:grid;place-items:center;overflow:hidden}
+.map svg{width:100%;height:460px}
+.map .meta{position:absolute;left:30px;top:26px;display:grid;gap:4px}
+.map .meta b{font:800 28px/32px var(--body)}
+.legend{position:absolute;right:28px;bottom:22px;display:flex;gap:14px;font:800 11px/14px var(--body);letter-spacing:1px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.count{margin-top:16px;color:var(--muted);font-size:14px}
+
+/* community */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.list{padding:8px 30px}
+.item{display:flex;align-items:center;gap:14px;padding:17px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border:0}
+.item .pos{width:30px;font:800 16px/1 var(--body);color:var(--muted)}
+.item .who{flex:1;min-width:0}
+.item .who b{display:block;font-weight:700}
+.item .who span{font-size:13px;color:var(--muted)}
+.item .t{font:800 17px/1 var(--body)}
+.sub{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sub .card{padding:26px}
+.sub p{color:var(--muted);font-size:15px;margin-top:8px}
+
+/* founder + download */
+.founder{display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+.avatar{width:132px;height:132px;border-radius:50%;border:1px solid var(--signal);display:grid;place-items:center;background:var(--surface-2);overflow:hidden;position:relative}
+.avatar svg{width:66px;height:66px}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dl{text-align:center;border-color:var(--signal);padding:80px 28px;background:radial-gradient(700px 340px at 50% 0,rgba(139,227,60,.14),transparent),var(--surface)}
+.dl h2{margin:18px auto 18px;max-width:16ch}
+.dl .lead{margin:0 auto}
+.dl .cta{justify-content:center}
+.mail{margin-top:20px;color:var(--muted);font-size:14px}
+footer{border-top:1px solid var(--line);padding:48px 0 64px;color:var(--muted);font-size:13px}
+footer .wrap{display:grid;gap:20px}
+footer .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px}
+footer .top svg{height:36px;width:auto}
+footer .links{display:flex;flex-wrap:wrap;gap:24px}
+footer a{color:var(--text);text-decoration:none;font-weight:700}
+footer a:hover{color:var(--signal)}
+
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media (max-width:960px){
+  section{padding:76px 0}
+  .nav nav{display:none}.nav .btn{margin-left:auto}
+  .hero{min-height:auto;padding-top:104px}
+  .hero .wrap,.circ,.two,.steps,.photos,.import{grid-template-columns:1fr}
+  .stage{height:560px}.stage .trace{inset:-10px -30px}
+  .photo:first-child{aspect-ratio:4/5}
+  .f,.f.wide{grid-column:span 6}
+  .tabs{flex-direction:row;overflow-x:auto;padding-bottom:4px}.tab{flex:none}
+  .founder{grid-template-columns:1fr}
+  .map{min-height:440px}.map svg{height:340px;margin-top:60px}
+  .scroll-cue{display:none}
+}
+@media (max-width:520px){
+  .wrap{padding:0 18px}
+  .sub{grid-template-columns:1fr}
+  .card{padding:24px}
+  .phone{width:270px}
+  .live .time{font-size:56px}
+  .nav .logo svg{height:34px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}.band div{animation:none}.reveal{opacity:1;transform:none;transition:none}.btn,.photo img{transition:none}.flash-g,.flash-r{animation:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Vai al contenuto</a>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Chronic Track Club, inizio pagina"><svg id="lockup" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397 112" width="397" height="112" aria-hidden="true"><path d="M82.79 35.07 A34 34 0 1 0 82.79 76.93" fill="none" stroke="#F4F6FA" stroke-width="14"/><rect x="88.32" y="38.15" width="8.68" height="35.70" fill="#8BE33C"/><circle cx="56.00" cy="56.00" r="4.76" fill="#8BE33C"/><path d="M130.2 47.4V28.599L134.8 24.0H148.48L153.0 28.52V32.8H147.56V30.52L145.68 28.64H137.68L135.64 30.68V45.32L137.68 47.36H145.68L147.56 45.48V43.2H153.0V47.48L148.48 52.0H134.8ZM158.4 24.0H163.84V35.72H175.68V24.0H181.12V52.0H175.68V40.36H163.84V52.0H158.4ZM209.920 42.72V52.0H204.480V43.960L202.080 41.280H193.360V52.0H187.920V24.0H205.480L209.760 28.320V36.8L207.040 39.560ZM193.360 36.8H203.000L204.400 35.4V29.960L203.000 28.560H193.360ZM216.120 47.4V28.599L220.720 24.0H235.120L239.720 28.599V47.4L235.120 52.0H220.720ZM232.240 47.360 234.280 45.320V30.680L232.240 28.640H223.600L221.560 30.680V45.320L223.600 47.360ZM246.120 24.0H251.0L263.480 43.0H263.560V24.0H268.8V52.0H263.920L251.440 33.040H251.360V52.0H246.120ZM275.8 24.0H281.240V52.0H275.8ZM287.840 47.4V28.599L292.440 24.0H306.120L310.640 28.520V32.8H305.2V30.520L303.320 28.640H295.320L293.280 30.680V45.320L295.320 47.360H303.320L305.2 45.480V43.2H310.640V47.480L306.120 52.0H292.440Z" fill="#F4F6FA"/><path d="M136.96 68.6H128.6V64.0H150.76V68.6H142.4V92.0H136.96ZM177.56 82.72V92.0H172.12V83.96L169.72 81.28H161.0V92.0H155.56V64.0H173.12L177.4 68.32V76.8L174.68 79.56ZM161.0 76.8H170.640L172.040 75.4V69.960L170.640 68.56H161.0ZM192.0 64.0H196.96L207.2 92.0H201.68L199.4 85.8H189.56L187.28 92.0H181.76ZM198.2 81.32 194.48 70.68H194.4L190.8 81.32ZM211.2 87.4V68.6L215.8 64.0H229.48L234.0 68.52V72.8H228.56V70.52L226.68 68.64H218.68L216.64 70.68V85.32L218.68 87.36H226.68L228.56 85.48V83.2H234.0V87.48L229.48 92.0H215.8ZM239.4 64.0H244.84V75.72H249.08L255.84 64.0H261.960L253.760 77.96L262.64 92.0H256.400L249.040 80.36H244.84V92.0H239.4ZM279.12 87.4V68.6L283.72 64.0H297.400L301.92 68.52V72.8H296.48V70.52L294.6 68.64H286.6L284.56 70.68V85.32L286.6 87.36H294.6L296.48 85.48V83.2H301.92V87.48L297.400 92.0H283.72ZM307.320 64.0H312.760V87.4H326.760V92.0H307.320ZM331.360 87.2V64.0H336.800V85.32L338.840 87.36H346.680L348.72 85.32V64.0H354.16V87.2L349.360 92.0H336.16ZM360.960 64.0H378.520L382.520 68.0V75.84L380.920 77.48L383.760 80.36V87.68L379.440 92.0H360.960ZM375.720 75.72 377.160 74.28V69.960L375.760 68.56H366.280V75.72ZM376.680 87.44 378.400 85.72V81.8L376.680 80.08H366.280V87.44Z" fill="#F4F6FA"/></svg></a>
+    <nav aria-label="Sezioni">
+      <a href="#come-funziona">Come funziona</a>
+      <a href="#funzioni">Funzioni</a>
+      <a href="#importa">Importa</a>
+      <a href="#circuiti">Circuiti</a>
+      <a href="#community">Community</a>
+    </nav>
+    <a class="btn btn--sm" href="#scarica">Diventa tester</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+  <div class="hero-bg" aria-hidden="true"><img src="foto/hero.jpg" alt="" onerror="this.remove()"></div>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Ride · Analyze · Improve</span>
+      <h1>Ogni giro<br>è un <em>dato</em>.<br>Usalo.</h1>
+      <p class="lead">Il cronometro GPS gratuito per chi porta la moto in pista. Chiude il giro da solo, ti mostra il distacco mentre guidi e, ai box, ti fa vedere dove perdi tempo.</p>
+      <div class="cta">
+        <a class="btn" href="#scarica">Diventa tester <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn--ghost" href="#come-funziona">Come funziona</a>
+      </div>
+      <div class="facts">
+        <span class="pill pill--signal">Cronometro gratuito</span>
+        <span class="pill">Android</span>
+        <span class="pill">Funziona senza rete</span>
+        <span class="pill">Niente pubblicità</span>
+      </div>
+    </div>
+    <div class="stage" aria-hidden="true">
+      <div class="trace"><svg id="heroTrace" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="phone"><div class="screen"><div class="live">
+        <div class="top"><span>MUGELLO</span><b>● GPS</b></div>
+        <div class="hero-t" id="heroBox">
+          <div class="lap" id="lapN">GIRO 7</div>
+          <div class="time num" id="lapT">0:00.0</div>
+          <div class="delta num t-better" id="lapD">▲ -0.312</div>
+          <div class="cap">SUL TUO MIGLIORE</div>
+        </div>
+        <div class="row">
+          <div class="sec num" id="s1"><small>S1</small>—</div>
+          <div class="sec num" id="s2"><small>S2</small>—</div>
+          <div class="sec num" id="s3"><small>S3</small>—</div>
+        </div>
+        <div class="row">
+          <div class="tile"><b class="num t-best">1:52.418</b><span>MIGLIORE ★</span></div>
+          <div class="tile"><b class="num" id="pred">1:52.1</b><span>PREVISTO</span></div>
+          <div class="tile"><b class="num" id="kmh">0</b><span>KM/H</span></div>
+        </div>
+      </div></div></div>
+      <span class="demo-note">Dimostrazione · tempi di esempio</span>
+    </div>
+  </div>
+  <a class="scroll-cue" href="#come-funziona">Scorri ↓</a>
+</section>
+
+<div class="band" aria-hidden="true"><div id="band"></div></div>
+
+<section id="come-funziona">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Come funziona</span>
+      <h2>Tre gesti.<br>Nessuno in pista.</h2>
+      <p class="lead">Monti il telefono, confermi il circuito, esci dai box. Al resto pensa l'app: tu guardi solo avanti.</p>
+    </div>
+    <div class="steps">
+      <article class="card step reveal"><div class="n">01</div><h3>Ride</h3><p>Il GPS riconosce il circuito e il traguardo. Il giro si chiude da solo, senza toccare lo schermo. Funziona anche senza rete.</p></article>
+      <article class="card step reveal"><div class="n">02</div><h3>Analyze</h3><p>Al rientro trovi giri, settori e giro ideale. Sulla mappa scorri il giro punto per punto: velocità, frenata, forza G.</p></article>
+      <article class="card step reveal"><div class="n">03</div><h3>Improve</h3><p>Confronta due giri, i tuoi o quelli di un amico, e vedi curva per curva dove si apre il distacco. Il tuo migliore diventa l'obiettivo del turno dopo.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="pista" style="padding-top:0" aria-label="Foto in pista">
+  <div class="wrap">
+    <div class="photos">
+      <figure class="photo reveal">
+        <img src="foto/pista-1.jpg" alt="Moto in piega in pista" loading="lazy" onerror="this.remove()">
+        <div class="ghost" data-ghost="magione" aria-hidden="true"></div>
+        <figcaption><b>Magione</b><span>Autodromo dell'Umbria · 2.507 m</span></figcaption>
+      </figure>
+      <figure class="photo reveal">
+        <img src="foto/pista-2.jpg" alt="Moto sul rettilineo" loading="lazy" onerror="this.remove()">
+        <div class="ghost" data-ghost="mugello" aria-hidden="true"></div>
+        <figcaption><b>Mugello</b><span>5.245 m</span></figcaption>
+      </figure>
+      <figure class="photo reveal">
+        <img src="foto/pista-3.jpg" alt="Ai box con il telefono sul manubrio" loading="lazy" onerror="this.remove()">
+        <div class="ghost" data-ghost="misano" aria-hidden="true"></div>
+        <figcaption><b>Ai box</b><span>Il telefono è lo strumento</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="funzioni" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Funzioni</span>
+      <h2>Prima i numeri.<br>Poi tutto il resto.</h2>
+    </div>
+    <div class="grid">
+      <article class="card f wide reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></div>
+        <h3>Display di pista</h3>
+        <p>Cifre grandi, leggibili con un'occhiata. Scegli tu cosa vedere: ideale, migliore, km/h. Lo schermo lampeggia verde se stai migliorando, rosso se stai perdendo.</p>
+        <div class="mini"><span class="big num t-better">▲ -0.312</span><span class="big num t-worse">▼ +0.840</span><span class="big num t-best">★ 1:52.418</span></div>
+      </article>
+      <article class="card f wide reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg></div>
+        <h3>Analisi punto per punto</h3>
+        <p>Mappa zoomabile con velocità e forza G in ogni punto del giro. Sovrapponi il giro di un avversario e guarda dove fate linee diverse.</p>
+        <div class="mini"><span class="pill pill--signal">Giro ideale</span><span class="pill">Settori</span><span class="pill">Confronto giri</span></div>
+      </article>
+      <article class="card f reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M12 12l3-3"/><path d="M4 18h16"/></svg></div>
+        <h3>Giro automatico</h3>
+        <p>Circuiti con il traguardo già impostato. Niente pulsanti con i guanti: il tempo parte e si chiude sul traguardo.</p>
+      </article>
+      <article class="card f reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 7l3 3-8 8H6v-3z"/><path d="M4 21h16"/></svg></div>
+        <h3>Garage</h3>
+        <p>Click, precarico, pressioni in uscita e al rientro, manutenzione. Ogni turno ricorda con che assetto giravi.</p>
+      </article>
+      <article class="card f reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></div>
+        <h3>Battito dal vivo</h3>
+        <p>Collega la fascia o l'orologio e guarda il cuore insieme ai tempi: capisci quando stai tirando e quando respiri.</p>
+      </article>
+      <article class="card f wide reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6c0 5 6 12 6 12s6-7 6-12a6 6 0 0 0-6-6z"/><circle cx="12" cy="9" r="2"/></svg></div>
+        <h3>Meteo del circuito</h3>
+        <p>Temperatura e condizioni della pista dove stai andando, prima di caricare il furgone.</p>
+      </article>
+      <article class="card f wide reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></div>
+        <h3>Coach di allenamento</h3>
+        <p>Esercizi a livelli per pistino, piazzale e ovale. Per chi si allena anche con pit bike e piccole cilindrate.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="importa" style="padding-top:0">
+  <div class="wrap">
+    <div class="card import reveal">
+      <div>
+        <span class="eyebrow">Importa i tuoi dati</span>
+        <h2 style="margin:18px 0 18px">Hai già un cronometro? Portalo con te.</h2>
+        <p class="lead">Importa i file del tuo cronometro dedicato e li trovi accanto alle sessioni del telefono, con la stessa analisi. Te li hanno mandati su WhatsApp? Li apri direttamente da lì.</p>
+      </div>
+      <div class="files" aria-label="Formati supportati">
+        <div class="file"><span class="ext">.SES</span><div><b>PZ Racing*</b><span>Sessioni del cronometro</span></div><span class="ok" aria-label="supportato">✓</span></div>
+        <div class="file"><span class="ext">.CSV</span><div><b>RaceBox*</b><span>Sessioni esportate</span></div><span class="ok" aria-label="supportato">✓</span></div>
+        <div class="file"><span class="ext">GPS</span><div><b>Telefono</b><span>Funziona già da solo, gratis</span></div><span class="ok" aria-label="supportato">✓</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="circuiti" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Circuiti</span>
+      <h2>Il traguardo<br>è già lì.</h2>
+      <p class="lead">Autodromi e piste piccole già in libreria. Se la tua pista manca, la proponi tu dall'app.</p>
+    </div>
+    <div class="circ reveal">
+      <div class="tabs" role="tablist" aria-label="Circuiti" id="tabs"></div>
+      <div class="card map" role="tabpanel" id="map" aria-labelledby="tabs">
+        <div class="meta"><span class="label" id="mKind">Autodromo</span><b class="num" id="mLen">5.245 m</b></div>
+        <svg id="mapSvg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tracciato del circuito"></svg>
+        <div class="legend"><span><i style="background:var(--signal)"></i>TRAGUARDO</span><span><i style="background:var(--text)"></i>TRACCIATO</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="community" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Community</span>
+      <h2>Un club,<br>non solo un cronometro.</h2>
+      <p class="lead">Tieni le sessioni private o pubblicale. Decidi tu, turno per turno.</p>
+    </div>
+    <div class="two">
+      <div class="card list reveal" aria-label="Esempio di classifica">
+        <div class="item"><span class="label">Classifica · esempio</span></div>
+        <div class="item"><span class="pos num">1</span><div class="who"><b>Pilota A</b><span>600 Supersport</span></div><span class="t num t-best">★ 1:17.204</span></div>
+        <div class="item"><span class="pos num">2</span><div class="who"><b>Pilota B</b><span>1000 Superbike</span></div><span class="t num">+0.418</span></div>
+        <div class="item"><span class="pos num">3</span><div class="who"><b>Tu</b><span>La tua moto</span></div><span class="t num t-better">▲ +0.902</span></div>
+      </div>
+      <div class="sub">
+        <article class="card reveal"><h3>Classifiche per circuito</h3><p>Pilota, moto, tempo e settori, per confrontarti con moto come la tua.</p></article>
+        <article class="card reveal"><h3>Live di gruppo</h3><p>Chi resta ai box vede i tempi degli amici in pista, giro dopo giro.</p></article>
+        <article class="card reveal"><h3>Sfide e club</h3><p>Lancia una sfida tra amici o entra nel club della tua pista.</p></article>
+        <article class="card reveal"><h3>Fine giornata</h3><p>Il confronto di tutti i turni del gruppo: chi è migliorato di più, e dove.</p></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0" aria-label="Chi c'è dietro">
+  <div class="wrap">
+    <div class="card founder reveal">
+      <div class="avatar" aria-hidden="true"><svg viewBox="22 22 75 68"><path d="M82.79 35.07A34 34 0 1 0 82.79 76.93" fill="none" stroke="#F4F6FA" stroke-width="14"/><rect x="88.32" y="38.15" width="8.68" height="35.7" fill="#8BE33C"/><circle cx="56" cy="56" r="4.76" fill="#8BE33C"/></svg><img src="foto/dante.jpg" alt="" onerror="this.remove()"></div>
+      <div>
+        <span class="eyebrow">Chi c'è dietro</span>
+        <h3 style="font-size:32px;margin:12px 0 12px;text-transform:uppercase">Creato da un pilota, per i piloti</h3>
+        <p class="lead">Mi chiamo Dante Rossi, in pista sono Mr. Iron Ghost. Ho costruito Chronic Track Club perché volevo uno strumento semplice: il telefono sul manubrio, i numeri giusti davanti e, la sera, capire dove migliorare.</p>
+        <div class="cta" style="margin-top:22px"><a class="btn btn--ghost btn--sm" href="https://www.instagram.com/mr.iron_ghost/" rel="noopener">Instagram · @mr.iron_ghost</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="scarica" style="padding-top:0">
+  <div class="wrap">
+    <div class="card dl reveal">
+      <span class="eyebrow">Diventa tester</span>
+      <h2>Pronto per la pista?</h2>
+      <p class="lead">Chronic Track Club sta arrivando su Google Play e il cronometro GPS è gratuito. Cerco piloti che lo provino per primi: lascia la tua email e ti scrivo appena è pronto.</p>
+      <div class="cta">
+        <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSeifGTcLxLF_rC2eALSImjWr_wfQ53IAli8Wdt4f1XAVozftg/viewform" rel="noopener">Avvisami e diventa tester</a>
+        <span class="btn btn--ghost" aria-disabled="true">Presto su Google Play</span>
+      </div>
+      <p class="mail">Idee o domande? Scrivi a <a href="mailto:chronictrackclub@gmail.com">chronictrackclub@gmail.com</a></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="top">
+      <svg viewBox="0 0 397 112" aria-label="Chronic Track Club" role="img"><use href="#lockup"/></svg>
+      <div class="links">
+        <a href="https://sites.google.com/view/chronictrackclub/home-page">Privacy</a>
+        <a href="https://sites.google.com/view/chronictrackclub/elimina-account">Elimina account</a>
+        <a href="https://www.instagram.com/mr.iron_ghost/" rel="noopener">Instagram</a>
+        <a href="mailto:chronictrackclub@gmail.com">chronictrackclub@gmail.com</a>
+      </div>
+    </div>
+    <p>In moto guardi la pista: il display si legge con un'occhiata, il resto lo trovi ai box. Usa l'app su circuiti e track day, nel rispetto del regolamento dell'organizzatore.</p>
+    <p>* PZ Racing e RaceBox sono marchi dei rispettivi proprietari. Chronic Track Club non è affiliata né approvata da nessuno dei due.</p>
+    <p>© 2026 Chronic Track Club · Creato da Dante Rossi</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var C={
+ mugello:{name:"Mugello",kind:"Autodromo",len:"5.245 m",w:712,h:1000,p:"380 465 393 437 406 409 420 382 433 355 447 328 462 301 476 274 489 246 502 219 514 191 526 163 537 134 548 106 559 77 570 49 585 23 608 3 637 5 653 30 654 60 650 91 643 120 643 151 660 175 686 191 705 215 712 244 706 274 690 300 671 324 653 348 635 373 617 397 600 423 583 448 570 475 567 505 577 534 583 564 576 593 560 619 541 643 521 666 502 690 483 714 464 738 444 761 420 779 391 787 361 786 330 789 302 799 278 818 261 843 249 871 240 901 230 929 215 956 194 978 168 993 138 1000 108 997 79 988 51 975 26 958 7 935 0 905 3 875 8 845 15 815 20 785 25 755 29 725 35 695 44 666 66 646 96 641 126 636 152 621 172 598 182 569 189 540 196 510 204 480 212 451 221 422 229 392 241 364 263 344 292 337 317 353 332 379 329 407 311 432 292 456 274 480 259 507 245 534 234 559 230 588 219 615 201 639 182 664 164 688 146 712 128 737 109 761 91 786 74 810 60 838 56 868 66 896 87 917 117 922 145 912 169 893 189 870 202 843 215 815 227 787 240 759 252 731 265 704 278 676 290 648 303 620 315 592 327 564 340 536 352 509"},
+ magione:{name:"Magione",kind:"Autodromo dell'Umbria",len:"2.507 m",w:338,h:1000,p:"108 389 99 374 89 359 80 343 72 327 63 312 54 296 45 280 36 264 27 249 19 233 11 217 4 200 0 182 1 165 7 148 19 134 35 127 53 128 69 136 83 148 92 163 97 180 102 198 105 216 109 233 112 251 116 269 120 286 125 304 130 321 137 337 146 352 160 364 177 370 192 360 198 343 198 325 196 307 192 290 188 272 184 255 180 237 176 219 172 202 168 184 164 167 160 149 154 132 148 115 139 100 127 86 112 76 95 72 77 69 62 59 63 42 75 28 89 17 104 8 121 2 139 0 154 10 164 24 171 41 176 58 180 76 183 94 186 111 189 129 193 147 196 165 199 182 202 200 205 218 208 236 211 253 214 271 218 289 221 306 224 324 227 342 231 360 234 377 238 395 241 413 244 430 248 448 251 466 255 483 258 501 262 519 265 536 269 554 272 572 276 589 279 607 283 625 286 642 290 660 293 678 297 695 300 713 304 731 307 748 311 766 314 784 318 801 321 819 325 837 329 854 332 872 335 890 337 908 337 926 334 943 327 960 316 974 302 984 285 992 268 997 250 999 232 1000 214 998 197 993 180 986 165 976 151 965 138 952 127 938 118 923 113 905 114 888 122 872 135 859 150 848 165 838 180 828 192 816 201 800 201 782 196 765 189 748 186 731 188 713 199 699 214 688 226 675 233 659 234 641 231 623 226 606 219 589 211 573 203 557 194 541 185 525 176 510 167 494 158 479 149 463 140 448 130 432 121 417 112 401"},
+ misano:{name:"Misano",kind:"World Circuit",len:"4.226 m",w:1000,h:712,p:"535 302 524 328 513 354 502 380 490 406 479 432 468 458 455 483 441 508 423 530 398 545 370 547 342 546 316 557 303 582 299 610 294 638 281 662 260 682 236 696 209 706 181 711 152 712 124 712 96 710 67 707 39 703 13 693 0 669 13 645 37 629 65 628 92 637 119 644 147 641 173 628 194 610 214 589 233 568 252 547 272 526 291 505 309 484 328 462 346 440 363 418 381 395 398 373 414 349 430 326 446 303 462 279 478 255 492 231 506 206 516 179 515 151 496 131 468 129 441 137 415 148 390 162 366 177 342 192 318 207 293 221 268 235 243 248 217 259 190 269 163 276 134 276 111 262 108 234 123 210 146 193 170 179 196 167 222 156 249 146 275 135 301 124 328 113 354 102 380 91 406 80 432 69 458 58 485 47 511 36 537 25 564 16 592 8 619 3 648 0 676 1 704 3 732 8 760 12 788 18 816 24 844 31 870 41 896 52 921 67 944 83 965 102 983 124 996 149 1000 177 997 206 990 233 981 260 966 284 941 292 925 269 920 241 918 213 915 185 908 157 895 132 875 112 850 99 823 89 796 81 769 73 741 64 714 57 686 53 658 57 636 74 621 98 610 124 599 151 589 177 578 203 566 229 555 255 544 280"},
+ sagittario:{name:"Il Sagittario",kind:"Circuito internazionale · Latina",len:"1.540 m",w:1000,h:889,p:"251 79 218 91 186 105 153 119 121 134 90 151 62 172 37 196 18 226 6 259 0 294 5 329 14 363 26 396 43 427 65 455 89 481 118 501 149 518 175 541 195 571 207 604 208 639 201 673 192 708 184 742 179 777 180 813 188 847 209 875 241 888 276 886 310 876 342 861 373 843 402 823 430 802 459 781 487 760 515 740 544 719 572 697 600 675 627 653 655 631 682 609 709 586 736 563 763 540 789 516 816 493 842 469 868 446 894 421 919 396 943 370 964 342 980 310 992 277 999 243 996 208 966 196 933 209 905 231 880 255 858 283 838 312 818 341 798 371 777 398 755 426 731 452 705 477 677 498 648 517 615 532 581 542 547 545 512 540 479 527 450 507 423 484 398 459 374 433 351 406 330 378 312 348 298 316 293 281 298 246 315 215 339 189 369 171 402 159 435 147 468 133 501 121 535 112 570 112 604 123 633 142 658 167 677 197 680 231 657 256 622 264 589 255 554 246 519 243 486 253 458 275 439 304 432 338 434 374 447 407 473 430 505 445 539 450 574 445 607 432 636 413 663 389 688 365 713 339 735 312 757 284 775 254 779 220 771 185 756 153 738 123 717 94 693 68 668 44 640 22 608 7 574 0 539 0 504 5 469 13 435 23 402 34 368 45 335 56 302 68 270 79"}
+};
+var NS="http://www.w3.org/2000/svg",reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+function d(c){var a=c.p.split(" "),s="M"+a[0]+" "+a[1];for(var i=2;i<a.length;i+=2)s+="L"+a[i]+" "+a[i+1];return s+"Z"}
+function el(n,at){var e=document.createElementNS(NS,n);for(var k in at)e.setAttribute(k,at[k]);return e}
+function draw(svg,c,o){
+  o=o||{};var pad=40;svg.innerHTML="";
+  svg.setAttribute("viewBox",(-pad)+" "+(-pad)+" "+(c.w+2*pad)+" "+(c.h+2*pad));
+  var path=el("path",{d:d(c),fill:"none",stroke:o.stroke||"#F4F6FA","stroke-width":o.sw||10,"stroke-linejoin":"round","stroke-linecap":"round"});
+  svg.appendChild(path);
+  if(o.finish){var a=c.p.split(" "),x=+a[0],y=+a[1],dx=a[2]-x,dy=a[3]-y,l=Math.hypot(dx,dy)||1,nx=-dy/l*26,ny=dx/l*26;
+    svg.appendChild(el("line",{x1:x-nx,y1:y-ny,x2:x+nx,y2:y+ny,stroke:"#8BE33C","stroke-width":10}))}
+  return path;
+}
+var $=function(i){return document.getElementById(i)};
+/* nav background on scroll */
+var nav=$("nav");function onS(){nav.classList.toggle("solid",scrollY>24)}addEventListener("scroll",onS,{passive:true});onS();
+/* ghost outlines in photo slots */
+[].forEach.call(document.querySelectorAll("[data-ghost]"),function(g){
+  var s=el("svg",{preserveAspectRatio:"xMidYMid meet"});g.appendChild(s);draw(s,C[g.getAttribute("data-ghost")],{stroke:"#566072",sw:6});
+});
+/* hero */
+var hs=$("heroTrace"),hp=draw(hs,C.mugello,{stroke:"#232B37",sw:16,finish:true});
+var trail=el("path",{d:d(C.mugello),fill:"none",stroke:"#8BE33C","stroke-width":5,"stroke-linecap":"round"});hs.appendChild(trail);
+var dot=el("circle",{r:13,fill:"#8BE33C"}),halo=el("circle",{r:26,fill:"none",stroke:"#8BE33C","stroke-width":2,opacity:.5});hs.appendChild(halo);hs.appendChild(dot);
+var L=hp.getTotalLength(),BEST=112.418,LAPS=[111.9,112.9,112.1],lapI=0,lap=7,t0=performance.now();
+trail.setAttribute("stroke-dasharray",L);
+function fmt(s,dec){var m=Math.floor(s/60),r=s-m*60;return m+":"+(r<10?"0":"")+r.toFixed(dec)}
+function sgn(v){return (v<0?"▲ -":"▼ +")+Math.abs(v).toFixed(3)}
+function setSec(id,n,v,cls){$(id).innerHTML="<small>S"+n+"</small>"+v;$(id).className="sec num "+(cls||"")}
+function frame(now){
+  var target=LAPS[lapI%LAPS.length],t=(now-t0)/1000;
+  if(t>=target){
+    var diff=target-BEST,box=$("heroBox");box.classList.remove("flash-g","flash-r");void box.offsetWidth;box.classList.add(diff<0?"flash-g":"flash-r");
+    lap++;lapI++;t0=now;t=0;target=LAPS[lapI%LAPS.length];
+    setSec("s1",1,"—");setSec("s2",2,"—");setSec("s3",3,"—");
+  }
+  var f=t/target,pt=hp.getPointAtLength(f*L),pb=hp.getPointAtLength(((f-.004+1)%1)*L),pa=hp.getPointAtLength(((f+.02)%1)*L);
+  dot.setAttribute("cx",pt.x);dot.setAttribute("cy",pt.y);halo.setAttribute("cx",pt.x);halo.setAttribute("cy",pt.y);
+  trail.setAttribute("stroke-dashoffset",L*(1-f));
+  var a1=Math.atan2(pt.y-pb.y,pt.x-pb.x),a2=Math.atan2(pa.y-pt.y,pa.x-pt.x),turn=Math.abs(Math.atan2(Math.sin(a2-a1),Math.cos(a2-a1)));
+  var v=Math.round(Math.max(72,268-turn*310));
+  var delta=(target-BEST)*f+Math.sin(f*9)*.12;
+  $("lapN").textContent="GIRO "+lap;$("lapT").textContent=fmt(t,1);
+  $("lapD").textContent=sgn(delta);$("lapD").className="delta num "+(delta<0?"t-better":"t-worse");
+  $("pred").textContent=fmt(BEST+delta,1);$("kmh").textContent=v;
+  var cur=f<.33?1:f<.66?2:3;
+  if(cur>1&&$("s1").textContent.indexOf("—")>-1)setSec("s1",1,(target*.33).toFixed(1),target<BEST?"t-better":"t-worse");
+  if(cur>2&&$("s2").textContent.indexOf("—")>-1)setSec("s2",2,(target*.33).toFixed(1),lapI%3===0?"t-best":"t-better");
+  ["s1","s2","s3"].forEach(function(id,i){$(id).classList.toggle("cur",i+1===cur)});
+  if(!reduce)requestAnimationFrame(frame);
+}
+if(reduce){t0=performance.now()-41000;frame(performance.now())}else requestAnimationFrame(frame);
+/* band */
+var names=["Mugello","Magione","Misano","Vallelunga","Imola","Cremona","Varano","Franciacorta","Adria","Modena","Il Sagittario","Viterbo"],b="";
+for(var k=0;k<2;k++)names.forEach(function(n){b+="<span>"+n+"</span><i>●</i>"});$("band").innerHTML=b;
+/* circuits tabs */
+var tabs=$("tabs"),ms=$("mapSvg"),keys=Object.keys(C);
+function show(k,focus){
+  var c=C[k],p=draw(ms,c,{sw:9,finish:true});ms.setAttribute("aria-label","Tracciato di "+c.name);
+  var len=p.getTotalLength();
+  if(!reduce){p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p.getBoundingClientRect();p.style.transition="stroke-dashoffset 1.6s ease";p.style.strokeDashoffset=0}
+  $("mKind").textContent=c.kind;$("mLen").textContent=c.len;
+  [].forEach.call(tabs.children,function(t){var on=t.dataset.k===k;t.setAttribute("aria-selected",on);t.tabIndex=on?0:-1;if(on&&focus)t.focus()});
+}
+keys.forEach(function(k){var t=document.createElement("button");t.type="button";t.className="tab";t.setAttribute("role","tab");t.setAttribute("aria-controls","map");t.dataset.k=k;
+  t.innerHTML="<b>"+C[k].name+"</b><span class='num'>"+C[k].len+"</span>";t.addEventListener("click",function(){show(k)});tabs.appendChild(t)});
+tabs.addEventListener("keydown",function(e){var i=keys.indexOf(document.activeElement.dataset.k);if(i<0)return;
+  if(e.key==="ArrowDown"||e.key==="ArrowRight"){e.preventDefault();show(keys[(i+1)%keys.length],true)}
+  if(e.key==="ArrowUp"||e.key==="ArrowLeft"){e.preventDefault();show(keys[(i+keys.length-1)%keys.length],true)}});
+show("mugello");
+/* reveal */
+var rv=document.querySelectorAll(".reveal");
+if("IntersectionObserver" in window&&!reduce){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});[].forEach.call(rv,function(r){io.observe(r)})}
+else [].forEach.call(rv,function(r){r.classList.add("in")});
+})();
+</script>
+</body>
+</html>
